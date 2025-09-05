@@ -1,0 +1,11 @@
+export const PROGRAM_ID = "Cmkuew2GUYTjZh8QQnP8NzSq9wAJtoJ64vUViPUkdgUk";
+export const ADMIN_ADDRESS = "6V9ng1g3UgafjCrCgXNBF4SwXbARB89YP9i8rAhY7Xem";
+export const TOKEN_DECIMALS = "6";
+export const TOKEN_SUPPLY = "1000000000000000";
+export const BURN_BPS = "5";
+export const GRAND_WINNER_BPS = "8200";
+export const SECOND_WINNER_BPS = "200";
+export const THIRD_WINNER_BPS = "200";
+export const DCA_BPS = "1200";
+export const DCA_ADDRESS = "6V9ng1g3UgafjCrCgXNBF4SwXbARB89YP9i8rAhY7Xem";
+export const FEE_BPS = "5";

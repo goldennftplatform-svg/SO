@@ -1,0 +1,317 @@
+/* 
+ * This file contains theme variables that are meant to be customized.
+ * Replace these variables with your desired color scheme and styling.
+ * Required button variables for consistent styling:
+ * --button: Background color
+ * --button-foreground: Text color
+ * --button-border: Border color
+ * --button-hover: Hover background color
+ * --button-hover-foreground: Hover text color
+ * --button-hover-border: Hover border color
+ */
+
+ @tailwind base;
+ @tailwind components;
+ @tailwind utilities;
+ 
+ @layer base {
+   :root {
+     /* Anonymous/Anon Culture Theme - Green Hacker Matrix */
+     --background: 120 15% 4%;       /* Very dark green background */
+     --foreground: 120 20% 95%;      /* Near white text with green tint */
+     
+     /* Component colors - Dark theme with green accents */
+     --card: 120 15% 8%;
+     --card-foreground: 120 20% 95%;
+     
+     --popover: 120 15% 8%;
+     --popover-foreground: 120 20% 95%;
+     
+     --primary: 120 100% 50%;        /* Bright matrix green */
+     --primary-foreground: 120 15% 4%;
+     
+     --secondary: 120 10% 12%;       /* Dark green-gray */
+     --secondary-foreground: 120 20% 95%;
+     
+     --muted: 120 10% 12%;
+     --muted-foreground: 120 15% 65%;
+     
+     --accent: 120 10% 12%;
+     --accent-foreground: 120 20% 95%;
+     
+     --destructive: 0 62.8% 30.6%;
+     --destructive-foreground: 120 20% 95%;
+     
+     /* Border and input - Dark with green tint */
+     --border: 120 10% 12%;
+     --input: 120 10% 12%;
+     --ring: 120 100% 50%;
+     
+     /* Link colors - Green hacker theme */
+     --link: 120 100% 50%;
+     --link-hover: 140 100% 60%;
+     
+     /* Button - Dark theme with green accents */
+     --button: 120 15% 8%;           /* Dark background */
+     --button-foreground: 120 20% 95%; /* Light text */
+     --button-border: 120 100% 50%;  /* Matrix green border */
+     --button-hover: 120 100% 50%;   /* Matrix green background on hover */
+     --button-hover-foreground: 120 15% 4%; /* Dark text on hover */
+     --button-hover-border: 140 100% 60%;   /* Lighter green border on hover */
+     --button-ring: 120 100% 50%;    /* Matrix green ring color */
+     
+     /* Chart - Green hacker gradient theme */
+     --chart-1: 120 100% 50%; /* Bright matrix green */
+     --chart-2: 140 100% 60%; /* Lime green */
+     --chart-3: 100 100% 50%; /* Yellow-green */
+     --chart-4: 160 100% 40%; /* Dark green */
+     --chart-5: 180 100% 45%; /* Cyan-green */
+     
+     /* Sidebar - Matching dark green theme */
+     --sidebar-background: 120 15% 4%;
+     --sidebar-foreground: 120 20% 95%;
+     --sidebar-primary: 120 100% 50%;
+     --sidebar-primary-foreground: 120 15% 4%;
+     --sidebar-accent: 120 10% 12%;
+     --sidebar-accent-foreground: 120 20% 95%;
+     --sidebar-border: 120 10% 12%;
+     --sidebar-ring: 120 100% 50%;
+     
+     /* Fixed values */
+     --radius: 0.5rem;  /* Sharp edges for terminal aesthetic */
+   }
+ }
+ 
+ /* Ensure body has no layout spacing that react-remove-scroll can convert */
+html, body { margin: 0; }
+
+/* App chrome layout */
+:root {
+  --preview-h: 48px;
+  --warn-h: 40px;
+}
+
+#app-shell { min-height: 100vh; }
+
+/* Reserve space for the fixed bars on the WRAPPER, not body */
+#app-shell.with-preview.with-warning { padding-top: calc(var(--preview-h) + var(--warn-h)); }
+#app-shell.with-preview:not(.with-warning) { padding-top: var(--preview-h); }
+#app-shell.with-warning:not(.with-preview) { padding-top: var(--warn-h); }
+
+/* Bars are truly fixed */
+.poof-preview-bar,
+.poof-integration-warning-bar {
+  position: fixed;
+  left: 0; right: 0;
+  z-index: 10000;
+}
+
+/* Preview bar at top */
+.poof-preview-bar {
+  top: 0;
+  height: var(--preview-h);
+}
+
+/* Warning bar sits below preview if present, else at top */
+.poof-integration-warning-bar {
+  top: 0;
+  height: var(--warn-h);
+}
+#app-shell.with-preview .poof-integration-warning-bar {
+  top: var(--preview-h);
+}
+
+/* Optional: if anything ever still toggles scroll-lock, keep our spacing stable */
+body[data-scroll-locked] { padding-top: 0 !important; }
+
+/* Subtle network indicator animation */
+@keyframes subtle-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+/* Anonymous/Anon background with matrix grid */
+.bg-grid-pattern {
+  background-image: 
+    linear-gradient(rgba(0, 255, 0, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 0, 0.08) 1px, transparent 1px);
+  background-size: 20px 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.bg-grid-pattern::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(0, 255, 0, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(0, 255, 41, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(0, 255, 127, 0.03) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Matrix digital rain animation */
+.floating-bubbles {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.bubble {
+  position: absolute;
+  background: linear-gradient(180deg, rgba(0, 255, 0, 0.8), rgba(0, 255, 0, 0.1));
+  width: 2px;
+  height: 100px;
+  animation: matrix-rain 8s infinite linear;
+  opacity: 0;
+  font-family: 'Courier New', monospace;
+  color: rgba(0, 255, 0, 0.6);
+  font-size: 12px;
+  line-height: 14px;
+}
+
+.bubble:nth-child(1) { left: 10%; animation-delay: 0s; }
+.bubble:nth-child(2) { left: 25%; animation-delay: 1s; }
+.bubble:nth-child(3) { left: 40%; animation-delay: 2s; }
+.bubble:nth-child(4) { left: 55%; animation-delay: 3s; }
+.bubble:nth-child(5) { left: 70%; animation-delay: 4s; }
+.bubble:nth-child(6) { left: 85%; animation-delay: 5s; }
+
+@keyframes matrix-rain {
+  0% {
+    transform: translateY(-100px);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh);
+    opacity: 0;
+  }
+}
+
+/* Gradient text for anonymous protocol branding */
+.gradient-text {
+  background: linear-gradient(135deg, #00ff00 0%, #00ff41 50%, #00ff7f 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glow effects for important elements - Green hacker theme */
+.glow-green {
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.4);
+}
+
+.glow-matrix {
+  box-shadow: 0 0 20px rgba(0, 255, 41, 0.4);
+}
+
+/* Floating site effect - Matrix green theme */
+.floating-card {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 10px 25px rgba(0, 255, 0, 0.1),
+    0 20px 40px rgba(0, 255, 41, 0.1),
+    0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  border: 1px solid rgba(0, 255, 0, 0.2);
+}
+
+.floating-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 
+    0 15px 35px rgba(0, 255, 0, 0.15),
+    0 25px 50px rgba(0, 255, 41, 0.15),
+    0 2px 6px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(0, 255, 0, 0.4);
+}
+
+/* Mobile-friendly touch targets */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 12px 16px;
+}
+
+/* Mobile-optimized spacing */
+.mobile-spacing {
+  padding: 16px;
+}
+
+@media (max-width: 768px) {
+  .mobile-spacing {
+    padding: 12px;
+  }
+}
+
+/* Animated gradient borders - Green hacker theme */
+@keyframes gradient-border {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animated-border {
+  background: linear-gradient(-45deg, #00ff00, #00ff41, #00ff7f, #00ff00);
+  background-size: 400% 400%;
+  animation: gradient-border 3s ease infinite;
+}
+
+/* Terminal-style pulsing glow */
+@keyframes terminal-glow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(0, 255, 0, 0.5), 0 0 10px rgba(0, 255, 41, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 10px rgba(0, 255, 0, 0.8), 0 0 20px rgba(0, 255, 41, 0.5);
+  }
+}
+
+.terminal-glow {
+  animation: terminal-glow 2s ease-in-out infinite;
+}
+
+/* Mobile-first responsive utilities */
+.mobile-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .mobile-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .mobile-grid {
+    gap: 2rem;
+  }
+}

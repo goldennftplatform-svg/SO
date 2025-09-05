@@ -1,0 +1,279 @@
+{
+  "uniblock/$requestId": {
+    "type": "api",
+    "service": "uniblock",
+    "rules": {
+      "create": "true",
+      "update": "true",
+      "delete": "true"
+    }
+  },
+  "appFiles/$fileId": {
+    "type": "storage",
+    "rules": {
+      "read": "true",
+      "create": "true",
+      "update": "false",
+      "delete": "false"
+    }
+  },
+  "uploadedImages/$imageId": {
+    "type": "storage",
+    "description": "User uploaded images ad files",
+    "rules": {
+      "read": "true",
+      "create": "@user.address == '6V9ng1g3UgafjCrCgXNBF4SwXbARB89YP9i8rAhY7Xem'",
+      "update": "false",
+      "delete": "@user.address == '6V9ng1g3UgafjCrCgXNBF4SwXbARB89YP9i8rAhY7Xem'"
+    }
+  },
+  "tokens/$tokenId": {
+    "operationDetails": {
+      "read": "Public access. Anyone can view SOF token metadata, total supply, reserves, and related statistics.",
+      "create": "Authentication required. Admin-only (address must equal '6V9ng1g3UgafjCrCgXNBF4SwXbARB89YP9i8rAhY7Xem'). Creating this document WILL EXECUTE hooks that mint 1000000000000000 smallest-unit tokens to the contract address and set up the escrow PDA used later for the LP mechanics.",
+      "update": "Operation disallowed. Token metadata cannot be changed once created.",
+      "delete": "Operation disallowed. Tokens cannot be deleted once created."
+    },
+    "onchain": true,
+    "fields": {
+      "tokenName": "String",
+      "tokenSymbol": "String",
+      "tokenImageUri": "String",
+      "virtualSolReserves": "UInt?",
+      "virtualTokenReserves": "UInt?",
+      "actualSolReserves": "UInt?",
+      "actualTokenReserves": "UInt?"
+    },
+    "rules": {
+      "read": "true",
+      "create": "@user.address == '6V9ng1g3UgafjCrCgXNBF4SwXbARB89YP9i8rAhY7Xem' && @newData.tokenName != null && @newData.tokenSymbol != null && @newData.tokenImageUri != null",
+      "update": "false",
+      "delete": "false"
+    },
+    "hooks": {
+      "onchain": {
+        "create": "@AccountPlugin.createAccount($tokenId) && @TokenPlugin.createToken($tokenId, @newData.tokenName, @newData.tokenSymbol, @newData.tokenImageUri, 6) && @TokenPlugin.mint($tokenId, @newData.tokenName, @newData.tokenSymbol, @contract.address, 1000000000000000)"
+      }
+    },
+    "queries": {
+      "getTokenMintAddress": {
+        "returnType": "String",
+        "query": "@TokenPlugin.getTokenMintAddress($tokenId, @data.tokenName, @data.tokenSymbol)"
+      },
+      "getUserTokenBalance": {
+        "returnType": "UInt",
+        "query": "@TokenPlugin.getBalance(@user.address, @TokenPlugin.getTokenMintAddress($tokenId, @data.tokenName, @data.tokenSymbol))"
+      },
+      "getTotalSupply": {
+        "returnType": "UInt",
+        "query": "@TokenPlugin.getSupply(@TokenPlugin.getTokenMintAddress($tokenId, @data.tokenName, @data.tokenSymbol))"
+      },
+      "getBurnedTokens": {
+        "returnType": "UInt",
+        "query": "1000000000000000 - @TokenPlugin.getSupply(@TokenPlugin.getTokenMintAddress($tokenId, @data.tokenName, @data.tokenSymbol))"
+      }
+    }
+  },
+  "tokens/$tokenId/transfers/$transferId": {
+    "operationDetails": {
+      "read": "Public access. Anyone can view token transfer analytics.",
+      "create": "Authentication required. Implements token transfer plus a burn equal to (5 / 10000) of the amount. The from field must match the caller. Creating this document WILL EXECUTE a hook that transfers (10000 - 5) / 10000 of the tokens to the recipient and burns the remainder.",
+      "update": "Operation disallowed. Transfer records are immutable.",
+      "delete": "Operation disallowed. Transfer records cannot be deleted."
+    },
+    "onchain": true,
+    "isPassthrough": true,
+    "fields": {
+      "from": "Address",
+      "to": "Address",
+      "tokenAmount": "UInt"
+    },
+    "rules": {
+      "read": "true",
+      "create": "@newData.from == @user.address && @newData.tokenAmount > 0",
+      "update": "false",
+      "delete": "false"
+    },
+    "hooks": {
+      "onchain": {
+        "create": "@TokenPlugin.transfer(@newData.from, @newData.to, @TokenPlugin.getTokenMintAddress($tokenId, get(/tokens/$tokenId).tokenName, get(/tokens/$tokenId).tokenSymbol), ((@newData.tokenAmount * (10000 - 5)) // 10000)) && @TokenPlugin.burn(@newData.from, @TokenPlugin.getTokenMintAddress($tokenId, get(/tokens/$tokenId).tokenName, get(/tokens/$tokenId).tokenSymbol), ((@newData.tokenAmount * 5) // 10000))"
+      }
+    }
+  },
+  "liquidityPools/$poolId": {
+    "operationDetails": {
+      "read": "Public access. Anyone can inspect LP pools, including whether they are game-owned (fee generating) or donated (permanent liquidity).",
+      "create": "Admin-only ('6V9ng1g3UgafjCrCgXNBF4SwXbARB89YP9i8rAhY7Xem'). Two scenarios: (a) Game-owned LP (isDonated = false) which the admin manages and collects fees from; (b) Donated LP (isDonated = true) whose LP tokens are effectively renounced. The creator must supply both solStaked and tokenStaked > 0. Creating this document WILL EXECUTE a hook that creates a DeFi pool and moves both SOL and token to the escrow PDA.",
+      "update": "Authentication required. Only the admin can update pool metadata. Donated pools (isDonated = true) should never be modified after creation.",
+      "delete": "Operation disallowed. Liquidity pools cannot be deleted to guarantee liquidity permanence."
+    },
+    "onchain": true,
+    "fields": {
+      "owner": "Address",
+      "tokenMintAddress": "Address",
+      "tokenStaked": "UInt",
+      "solStaked": "UInt",
+      "isDonated": "Bool"
+    },
+    "rules": {
+      "read": "true",
+      "create": "@user.address == '6V9ng1g3UgafjCrCgXNBF4SwXbARB89YP9i8rAhY7Xem' && @newData.owner == @user.address && @newData.tokenMintAddress != null && @newData.tokenStaked > 0 && @newData.solStaked > 0 && (@newData.isDonated == true || @newData.isDonated == false)",
+      "update": "@user.address == '6V9ng1g3UgafjCrCgXNBF4SwXbARB89YP9i8rAhY7Xem'",
+      "delete": "false"
+    },
+    "hooks": {
+      "onchain": {
+        "create": "@AccountPlugin.createAccount($poolId) && @DeFiPlugin.createPool(@user.address, @TokenPlugin.SOL, @newData.tokenMintAddress, @newData.solStaked, @newData.tokenStaked) && @TokenPlugin.transfer(@user.address, $poolId, @newData.tokenMintAddress, @newData.tokenStaked) && @TokenPlugin.transfer(@user.address, $poolId, @TokenPlugin.SOL, @newData.solStaked)"
+      }
+    },
+    "queries": {
+      "getPoolSolBalance": {
+        "returnType": "UInt",
+        "query": "@TokenPlugin.getBalance($poolId, @TokenPlugin.SOL)"
+      },
+      "getPoolTokenBalance": {
+        "returnType": "UInt",
+        "query": "@TokenPlugin.getBalance($poolId, @data.tokenMintAddress)"
+      }
+    }
+  },
+  "jackpots/$jackpotId": {
+    "operationDetails": {
+      "read": "Public access. Anyone can view jackpot pot size and winners.",
+      "create": "Admin-only ('6V9ng1g3UgafjCrCgXNBF4SwXbARB89YP9i8rAhY7Xem'). Opens a new SOL jackpot pot (isOpen = true, potLamports = 0). Creating this document WILL EXECUTE a hook that creates the escrow PDA.",
+      "update": "Admin-only ('6V9ng1g3UgafjCrCgXNBF4SwXbARB89YP9i8rAhY7Xem'). Used to close a jackpot (isOpen → false). Updating this WILL EXECUTE hooks distributing SOL to winners, the DCA wallet, and resetting potLamports.",
+      "delete": "Operation disallowed. Jackpots cannot be deleted."
+    },
+    "onchain": true,
+    "fields": {
+      "isOpen": "Bool",
+      "potLamports": "UInt",
+      "grandWinner": "Address?",
+      "secondWinner": "Address?",
+      "thirdWinner": "Address?"
+    },
+    "rules": {
+      "read": "true",
+      "create": "@user.address == '6V9ng1g3UgafjCrCgXNBF4SwXbARB89YP9i8rAhY7Xem' && @newData.isOpen == true && @newData.potLamports == 0",
+      "update": "@user.address == '6V9ng1g3UgafjCrCgXNBF4SwXbARB89YP9i8rAhY7Xem'",
+      "delete": "false"
+    },
+    "hooks": {
+      "onchain": {
+        "create": "@AccountPlugin.createAccount($jackpotId)",
+        "update": "(@data.isOpen == true && @newData.isOpen == false) && @TokenPlugin.transfer($jackpotId, @newData.grandWinner, @TokenPlugin.SOL, ((@data.potLamports * 8200) // 10000)) && @TokenPlugin.transfer($jackpotId, @newData.secondWinner, @TokenPlugin.SOL, ((@data.potLamports * 200) // 10000)) && @TokenPlugin.transfer($jackpotId, @newData.thirdWinner, @TokenPlugin.SOL, ((@data.potLamports * 200) // 10000)) && @TokenPlugin.transfer($jackpotId, '6V9ng1g3UgafjCrCgXNBF4SwXbARB89YP9i8rAhY7Xem', @TokenPlugin.SOL, ((@data.potLamports * 1200) // 10000)) && @DocumentPlugin.updateField(/jackpots/$jackpotId, 'potLamports', 0) || true"
+      }
+    },
+    "queries": {
+      "getPotSolBalance": {
+        "returnType": "UInt",
+        "query": "@TokenPlugin.getBalance($jackpotId, @TokenPlugin.SOL)"
+      }
+    }
+  },
+  "jackpots/$jackpotId/deposits/$depositId": {
+    "operationDetails": {
+      "read": "Public access. Anyone can view SOL deposits into an open jackpot pot.",
+      "create": "Authentication required. Deposits SOL directly into the jackpot escrow. The from field must match the caller. amount > 0 and jackpot must be open. Creating this document WILL EXECUTE a hook that transfers SOL and increments potLamports.",
+      "update": "Operation disallowed.",
+      "delete": "Operation disallowed."
+    },
+    "onchain": true,
+    "isPassthrough": true,
+    "fields": {
+      "from": "Address",
+      "amount": "UInt"
+    },
+    "rules": {
+      "read": "true",
+      "create": "@newData.from == @user.address && @newData.amount > 0 && get(/jackpots/$jackpotId).isOpen == true",
+      "update": "false",
+      "delete": "false"
+    },
+    "hooks": {
+      "onchain": {
+        "create": "@TokenPlugin.transfer(@newData.from, $jackpotId, @TokenPlugin.SOL, @newData.amount) && @DocumentPlugin.updateField(/jackpots/$jackpotId, 'potLamports', get(/jackpots/$jackpotId).potLamports + @newData.amount)"
+      }
+    }
+  },
+  "operations/$tokenId/buyToken/$buyTokenId": {
+    "operationDetails": {
+      "read": "Public access. Anyone can view buy operations (passthrough).",
+      "create": "Authentication required. User buys SOF with SOL. Must pass jackpotId (open jackpot) and solAmount > 0. A fee (5 basis points) in SOL is diverted to the jackpot escrow and counted toward potLamports. Remaining SOL enters the bonding-curve pool; tokens are transferred to the buyer. Creating this document WILL EXECUTE hooks that perform these transfers and state updates.",
+      "update": "Operation disallowed.",
+      "delete": "Operation disallowed."
+    },
+    "onchain": true,
+    "isPassthrough": true,
+    "fields": {
+      "solAmount": "UInt",
+      "jackpotId": "String"
+    },
+    "rules": {
+      "read": "true",
+      "create": "get(/jackpots/@newData.jackpotId).isOpen == true && @newData.solAmount > 0",
+      "update": "false",
+      "delete": "false"
+    },
+    "hooks": {
+      "onchain": {
+        "create": "@DocumentPlugin.updateField(/token/$tokenId, 'virtualSolReserves', get(/token/$tokenId).virtualSolReserves + ((@newData.solAmount * (10000 - 5)) // 10000)) && @DocumentPlugin.updateField(/token/$tokenId, 'actualSolReserves', get(/token/$tokenId).actualSolReserves + ((@newData.solAmount * (10000 - 5)) // 10000)) && @DocumentPlugin.updateField(/token/$tokenId, 'virtualTokenReserves', get(/token/$tokenId).virtualTokenReserves - @BondingCurvePlugin.getTokensOutProduct(((@newData.solAmount * (10000 - 5)) // 10000), get(/token/$tokenId).virtualSolReserves, get(/token/$tokenId).virtualTokenReserves, get(/token/$tokenId).actualSolReserves, get(/token/$tokenId).actualTokenReserves)) && @DocumentPlugin.updateField(/token/$tokenId, 'actualTokenReserves', get(/token/$tokenId).actualTokenReserves - @BondingCurvePlugin.getTokensOutProduct(((@newData.solAmount * (10000 - 5)) // 10000), get(/token/$tokenId).virtualSolReserves, get(/token/$tokenId).virtualTokenReserves, get(/token/$tokenId).actualSolReserves, get(/token/$tokenId).actualTokenReserves)) && @TokenPlugin.transfer(@user.address, $tokenId, @TokenPlugin.SOL, ((@newData.solAmount * (10000 - 5)) // 10000)) && @TokenPlugin.transfer(@user.address, @newData.jackpotId, @TokenPlugin.SOL, ((@newData.solAmount * 5) // 10000)) && @TokenPlugin.transfer($tokenId, @user.address, @TokenPlugin.getTokenMintAddress($tokenId, get(/tokens/$tokenId).tokenName, get(/tokens/$tokenId).tokenSymbol), @BondingCurvePlugin.getTokensOutProduct(((@newData.solAmount * (10000 - 5)) // 10000), get(/token/$tokenId).virtualSolReserves, get(/token/$tokenId).virtualTokenReserves, get(/token/$tokenId).actualSolReserves, get(/token/$tokenId).actualTokenReserves)) && @DocumentPlugin.updateField(/jackpots/@newData.jackpotId, 'potLamports', get(/jackpots/@newData.jackpotId).potLamports + ((@newData.solAmount * 5) // 10000))"
+      }
+    }
+  },
+  "operations/$tokenId/sellToken/$sellTokenId": {
+    "operationDetails": {
+      "read": "Public access. Anyone can view sell operations (passthrough).",
+      "create": "Authentication required. User sells SOF for SOL. Must pass jackpotId and tokenAmount > 0. A fee (5 basis points) of the SOL proceeds is diverted to the jackpot pot. Creating this document WILL EXECUTE hooks that perform these transfers and state updates.",
+      "update": "Operation disallowed.",
+      "delete": "Operation disallowed."
+    },
+    "onchain": true,
+    "isPassthrough": true,
+    "fields": {
+      "tokenAmount": "UInt",
+      "jackpotId": "String"
+    },
+    "rules": {
+      "read": "true",
+      "create": "get(/jackpots/@newData.jackpotId).isOpen == true && @newData.tokenAmount > 0",
+      "update": "false",
+      "delete": "false"
+    },
+    "hooks": {
+      "onchain": {
+        "create": "@DocumentPlugin.updateField(/token/$tokenId, 'virtualTokenReserves', get(/token/$tokenId).virtualTokenReserves + @newData.tokenAmount) && @DocumentPlugin.updateField(/token/$tokenId, 'actualTokenReserves', get(/token/$tokenId).actualTokenReserves + @newData.tokenAmount) && @DocumentPlugin.updateField(/token/$tokenId, 'virtualSolReserves', get(/token/$tokenId).virtualSolReserves - @BondingCurvePlugin.getSolOutProduct(@newData.tokenAmount, get(/token/$tokenId).virtualSolReserves, get(/token/$tokenId).virtualTokenReserves, get(/token/$tokenId).actualSolReserves, get(/token/$tokenId).actualTokenReserves)) && @DocumentPlugin.updateField(/token/$tokenId, 'actualSolReserves', get(/token/$tokenId).actualSolReserves - @BondingCurvePlugin.getSolOutProduct(@newData.tokenAmount, get(/token/$tokenId).virtualSolReserves, get(/token/$tokenId).virtualTokenReserves, get(/token/$tokenId).actualSolReserves, get(/token/$tokenId).actualTokenReserves)) && @TokenPlugin.transfer(@user.address, $tokenId, @TokenPlugin.getTokenMintAddress($tokenId, get(/tokens/$tokenId).tokenName, get(/tokens/$tokenId).tokenSymbol), @newData.tokenAmount) && @TokenPlugin.transfer($tokenId, @user.address, @TokenPlugin.SOL, ((@BondingCurvePlugin.getSolOutProduct(@newData.tokenAmount, get(/token/$tokenId).virtualSolReserves, get(/token/$tokenId).virtualTokenReserves, get(/token/$tokenId).actualSolReserves, get(/token/$tokenId).actualTokenReserves) * (10000 - 5)) // 10000)) && @TokenPlugin.transfer($tokenId, @newData.jackpotId, @TokenPlugin.SOL, ((@BondingCurvePlugin.getSolOutProduct(@newData.tokenAmount, get(/token/$tokenId).virtualSolReserves, get(/token/$tokenId).virtualTokenReserves, get(/token/$tokenId).actualSolReserves, get(/token/$tokenId).actualTokenReserves) * 5) // 10000)) && @DocumentPlugin.updateField(/jackpots/@newData.jackpotId, 'potLamports', get(/jackpots/@newData.jackpotId).potLamports + ((@BondingCurvePlugin.getSolOutProduct(@newData.tokenAmount, get(/token/$tokenId).virtualSolReserves, get(/token/$tokenId).virtualTokenReserves, get(/token/$tokenId).actualSolReserves, get(/token/$tokenId).actualTokenReserves) * 5) // 10000))"
+      }
+    }
+  },
+  "jackpots/$jackpotId/draws/$drawId": {
+    "operationDetails": {
+      "read": "Public access. Anyone can inspect a draw and verify the random number used for winner selection.",
+      "create": "Admin-only ('6V9ng1g3UgafjCrCgXNBF4SwXbARB89YP9i8rAhY7Xem'). Creates a new draw for an open jackpot. Requires totalEntries > 0. Creating this document WILL EXECUTE a hook that generates a verifiable random number and stores it on-chain for auditability.",
+      "update": "Operation disallowed. Draw records are immutable once created.",
+      "delete": "Operation disallowed. Draw records cannot be deleted."
+    },
+    "onchain": true,
+    "fields": {
+      "totalEntries": "UInt",
+      "randomNumber": "UInt?"
+    },
+    "rules": {
+      "read": "true",
+      "create": "@user.address == '6V9ng1g3UgafjCrCgXNBF4SwXbARB89YP9i8rAhY7Xem' && @newData.totalEntries > 0 && get(/jackpots/$jackpotId).isOpen == true",
+      "update": "false",
+      "delete": "false"
+    },
+    "hooks": {
+      "onchain": {
+        "create": "@DocumentPlugin.updateField(/jackpots/$jackpotId/draws/$drawId, 'randomNumber', @MathPlugin.getRandom($drawId, 0, @newData.totalEntries))"
+      }
+    },
+    "queries": {
+      "getRandomNumber": {
+        "returnType": "UInt",
+        "query": "@data.randomNumber"
+      }
+    }
+  }
+}

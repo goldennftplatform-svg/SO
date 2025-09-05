@@ -1,0 +1,26 @@
+[workspace]
+members = ["programs/TOKEN"]
+
+[programs.localnet]
+TOKEN = "Cmkuew2GUYTjZh8QQnP8NzSq9wAJtoJ64vUViPUkdgUk"
+
+[programs.devnet]
+TOKEN = "Cmkuew2GUYTjZh8QQnP8NzSq9wAJtoJ64vUViPUkdgUk"
+
+[programs.mainnet]
+TOKEN = "Cmkuew2GUYTjZh8QQnP8NzSq9wAJtoJ64vUViPUkdgUk"
+
+[features]
+seeds = false
+skip-lint = false
+
+[provider]
+cluster = "devnet"
+wallet = "temp-keypair.json"
+
+[test]
+startup_wait = 10000
+shutdown_wait = 0
+
+[test.validator]
+url = "http://localhost:8899"
