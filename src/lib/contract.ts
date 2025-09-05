@@ -59,8 +59,8 @@ export class SOFLOTTOContractImpl implements SOFLOTTOContract {
 
   // Helper method to get Associated Token Account address
   private async getAssociatedTokenAddress(mint: PublicKey, owner: PublicKey): Promise<PublicKey> {
-    const { getAssociatedTokenAddress } = await import('@solana/spl-token');
-    return await getAssociatedTokenAddress(mint, owner);
+    const { getAssociatedTokenAddressSync } = await import('@solana/spl-token');
+    return getAssociatedTokenAddressSync(mint, owner);
   }
 
   async initialize(): Promise<string> {
