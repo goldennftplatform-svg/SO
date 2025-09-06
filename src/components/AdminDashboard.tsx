@@ -428,7 +428,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ bankInventory, o
       const connection = new Connection('https://api.devnet.solana.com');
       
       // Test if the program is deployed
-      const programId = new PublicKey("Cmkuew2GUYTjZh8QQnP8NzSq9wAJtoJ64vUViPUkdgUk");
+      const programId = new PublicKey("6fF8UsauBAfBoQYxcnFBHsqX25yy5dM5VpAUcPtnZAtq");
       const programInfo = await connection.getAccountInfo(programId);
       
       if (programInfo) {

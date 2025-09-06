@@ -1,14 +1,17 @@
 [workspace]
-members = ["programs/TOKEN"]
+members = ["programs/TOKEN", "programs/LP"]
 
 [programs.localnet]
 TOKEN = "Cmkuew2GUYTjZh8QQnP8NzSq9wAJtoJ64vUViPUkdgUk"
+LP = "Cmkuew2GUYTjZh8QQnP8NzSq9wAJtoJ64vUViPUkdgUk"
 
 [programs.devnet]
 TOKEN = "Cmkuew2GUYTjZh8QQnP8NzSq9wAJtoJ64vUViPUkdgUk"
+LP = "Cmkuew2GUYTjZh8QQnP8NzSq9wAJtoJ64vUViPUkdgUk"
 
 [programs.mainnet]
 TOKEN = "Cmkuew2GUYTjZh8QQnP8NzSq9wAJtoJ64vUViPUkdgUk"
+LP = "Cmkuew2GUYTjZh8QQnP8NzSq9wAJtoJ64vUViPUkdgUk"
 
 [features]
 seeds = false

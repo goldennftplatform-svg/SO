@@ -1,4 +1,4 @@
-export const PROGRAM_ID = "Cmkuew2GUYTjZh8QQnP8NzSq9wAJtoJ64vUViPUkdgUk";
+export const PROGRAM_ID = "6fF8UsauBAfBoQYxcnFBHsqX25yy5dM5VpAUcPtnZAtq";
 export const ADMIN_ADDRESS = "6V9ng1g3UgafjCrCgXNBF4SwXbARB89YP9i8rAhY7Xem";
 export const TOKEN_DECIMALS = "6";
 export const TOKEN_SUPPLY = "1000000000000000";
